@@ -6,6 +6,7 @@ import {
   IconSpaceHorizontal16,
   Muted,
   render,
+  Stack,
   Text,
   TextboxMultiline,
   TextboxNumeric,
@@ -15,7 +16,7 @@ import { emit } from '@create-figma-plugin/utilities'
 import { h } from 'preact'
 import { useCallback, useState } from 'preact/hooks'
 
-import { CloseHandler, GenerateFrames } from './types'
+import { GenerateFrames } from './types'
 
 function Plugin() {
   const [csvData, setCsvData] = useState('')
@@ -36,37 +37,55 @@ function Plugin() {
   // }, [])
   return (
     <Container space="medium">
-      <VerticalSpace space="large" />
-      <Text>
-        <Muted>Data</Muted>
-      </Text>
-      <VerticalSpace space="small" />
-      <TextboxMultiline
-        onValueInput={setCsvData}
-        value={csvData}
-        variant="border"
-      />
-      <TextboxNumeric
-        integer
-        onNumericValueInput={setframesPerRow}
-        onValueInput={setframesPerRowString}
-        value={framesPerRowString}
-        variant="border"
-        icon={<IconLayerFrame16 />}
-      />
-      <TextboxNumeric
-        integer
-        onNumericValueInput={setGap}
-        onValueInput={setGapString}
-        value={gapString}
-        variant="border"
-        icon={<IconSpaceHorizontal16 />}
-      />
       <VerticalSpace space="extraLarge" />
-      <Button fullWidth onClick={handleGenerateFramesClick}>
-        Create
-      </Button>
-      <VerticalSpace space="small" />
+      <Stack space="medium">
+        <Stack space="small">
+          <Text>
+            <Muted>Data (tab-delimited CSV)</Muted><br />
+            Just select cells in your table editor (e.g. Google Sheets) and paste it here.
+          </Text>
+          <TextboxMultiline
+            onValueInput={setCsvData}
+            value={csvData}
+            variant="border"
+            style="font-family: monospace;"
+          />
+        </Stack>
+
+        <Columns space="medium">
+          <Stack space='extraSmall'>
+            <Text>
+              <Muted>Frames per row</Muted>
+            </Text>
+            <TextboxNumeric
+              integer
+              onNumericValueInput={setframesPerRow}
+              onValueInput={setframesPerRowString}
+              value={framesPerRowString}
+              variant="border"
+              icon={<IconLayerFrame16 />}
+            />
+          </Stack>
+          <Stack space='extraSmall'>
+            <Text>
+              <Muted>Gaps (px)</Muted>
+            </Text>
+            <TextboxNumeric
+              integer
+              onNumericValueInput={setGap}
+              onValueInput={setGapString}
+              value={gapString}
+              variant="border"
+              icon={<IconSpaceHorizontal16 />}
+            />
+          </Stack>
+        </Columns>
+
+        <Button fullWidth onClick={handleGenerateFramesClick}>
+          Create frames
+        </Button>
+        <VerticalSpace space="small" />
+      </Stack>
     </Container>
   )
 }
