@@ -36,13 +36,17 @@ function Plugin() {
   //   emit<CloseHandler>('CLOSE')
   // }, [])
   return (
-    <Container space="medium">
+    <Container space="small">
       <VerticalSpace space="extraLarge" />
       <Stack space="medium">
+          <Text>
+            1. Name your layers<br />
+            <Muted>Make sure your text layers' names match column names of your data.</Muted>
+          </Text>
         <Stack space="small">
           <Text>
-            <Muted>Data (tab-delimited CSV)</Muted><br />
-            Just select cells in your table editor (e.g. Google Sheets) and paste it here.
+            2. Paste data (tab-delimited CSV)<br />
+            <Muted>Select cells in your table editor (e.g. Google Sheets) and paste it here (expected input is tab-delimited CSV).</Muted>
           </Text>
           <TextboxMultiline
             onValueInput={setCsvData}
@@ -51,7 +55,9 @@ function Plugin() {
             style="font-family: monospace;"
           />
         </Stack>
-
+        <Text>
+            3. Configure options
+          </Text>
         <Columns space="medium">
           <Stack space='extraSmall'>
             <Text>

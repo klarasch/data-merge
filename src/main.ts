@@ -15,7 +15,7 @@ export default function () {
     figma.closePlugin()
   })
   showUI({ width: 260,
-    height: 260})
+    height: 360})
 }
 
 async function generateFrames(csvData: string, framesPerRow: number, gap: number) {
