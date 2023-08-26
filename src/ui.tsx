@@ -5,25 +5,24 @@ import {
   Muted,
   render,
   Text,
-  TextboxNumeric,
+  TextboxMultiline,
   VerticalSpace
 } from '@create-figma-plugin/ui'
 import { emit } from '@create-figma-plugin/utilities'
 import { h } from 'preact'
 import { useCallback, useState } from 'preact/hooks'
 
-import { CloseHandler, CreateRectanglesHandler } from './types'
+import { CloseHandler, GenerateFrames } from './types'
 
 function Plugin() {
-  const [count, setCount] = useState<number | null>(5)
-  const [countString, setCountString] = useState('5')
-  const handleCreateRectanglesButtonClick = useCallback(
+  const [csvData, setCsvData] = useState('')
+  const handleGenerateFramesClick = useCallback(
     function () {
-      if (count !== null) {
-        emit<CreateRectanglesHandler>('CREATE_RECTANGLES', count)
+      if (csvData !== null) {
+        emit<GenerateFrames>('GENERATE_FRAMES', csvData)
       }
     },
-    [count]
+    [csvData]
   )
   const handleCloseButtonClick = useCallback(function () {
     emit<CloseHandler>('CLOSE')
@@ -32,18 +31,17 @@ function Plugin() {
     <Container space="medium">
       <VerticalSpace space="large" />
       <Text>
-        <Muted>Count</Muted>
+        <Muted>Data</Muted>
       </Text>
       <VerticalSpace space="small" />
-      <TextboxNumeric
-        onNumericValueInput={setCount}
-        onValueInput={setCountString}
-        value={countString}
+      <TextboxMultiline
+        onValueInput={setCsvData}
+        value={csvData}
         variant="border"
       />
       <VerticalSpace space="extraLarge" />
       <Columns space="extraSmall">
-        <Button fullWidth onClick={handleCreateRectanglesButtonClick}>
+        <Button fullWidth onClick={handleGenerateFramesClick}>
           Create
         </Button>
         <Button fullWidth onClick={handleCloseButtonClick} secondary>

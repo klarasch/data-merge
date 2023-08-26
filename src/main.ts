@@ -1,31 +1,78 @@
 import { once, showUI } from '@create-figma-plugin/utilities'
 
-import { CloseHandler, CreateRectanglesHandler } from './types'
+import { CloseHandler, GenerateFrames } from './types'
 
 export default function () {
-  once<CreateRectanglesHandler>('CREATE_RECTANGLES', function (count: number) {
-    const nodes: Array<SceneNode> = []
-    for (let i = 0; i < count; i++) {
-      const rect = figma.createRectangle()
-      rect.x = i * 150
-      rect.fills = [
-        {
-          color: { b: 0, g: 0.5, r: 1 },
-          type: 'SOLID'
-        }
-      ]
-      figma.currentPage.appendChild(rect)
-      nodes.push(rect)
-    }
-    figma.currentPage.selection = nodes
-    figma.viewport.scrollAndZoomIntoView(nodes)
-    figma.closePlugin()
-  })
+  once<GenerateFrames>('GENERATE_FRAMES', function (csvData: string) {
+    generateFrames(csvData)
+      .catch(error => {
+        console.error(error);
+        figma.ui.postMessage({ type: 'error', message: 'An unexpected error occurred.' });
+        figma.closePlugin();
+      });
+  });
   once<CloseHandler>('CLOSE', function () {
     figma.closePlugin()
   })
   showUI({
-    height: 137,
-    width: 240
+
   })
+}
+
+async function generateFrames(csvData: string) {
+  const nodes: Array<SceneNode> = []
+  const selectedFrame = figma.currentPage.selection[0]
+  // error handling
+
+  if (!selectedFrame || selectedFrame.type !== 'FRAME') {
+    figma.ui.postMessage({ type: 'error', message: 'Select a frame to use as a template.' });
+    return;
+  }
+
+  const parsedData = parseCSVData(csvData);
+  if (!parsedData.length) {
+    figma.ui.postMessage({ type: 'error', message: 'Failed to parse CSV data.' });
+    return;
+  }
+
+  for (const [index, row] of parsedData.entries()) {
+    const newFrame = selectedFrame.clone();
+    newFrame.x = selectedFrame.x + index * (selectedFrame.width + 40);
+    figma.currentPage.appendChild(newFrame);
+
+    for (const key of Object.keys(row)) {
+      const value = row[key];
+      const textLayer = newFrame.findOne(node => node.type === "TEXT" && node.name === key);
+      if (textLayer) {
+        const textNode = textLayer as TextNode;
+        await figma.loadFontAsync(textNode.fontName as FontName);
+        textNode.characters = value;
+      }
+    }
+
+    figma.ui.postMessage({ type: 'progress', progress: (index + 1) / parsedData.length });
+  }
+
+  figma.currentPage.selection = nodes
+  figma.viewport.scrollAndZoomIntoView(nodes)
+  figma.closePlugin()
+}
+
+function parseCSVData(data: string, delimiter: string = '\t'): Array<{ [key: string]: string }> {
+  const rows = data.split('\n');
+  const header = rows[0].split(delimiter);
+  const result: Array<{ [key: string]: string }> = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i].split(delimiter);
+    const rowData: { [key: string]: string } = {};
+
+    for (let j = 0; j < header.length; j++) {
+      rowData[header[j]] = row[j];
+    }
+
+    result.push(rowData);
+  }
+
+  return result;
 }
