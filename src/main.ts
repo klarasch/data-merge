@@ -3,8 +3,8 @@ import { once, showUI } from '@create-figma-plugin/utilities'
 import { CloseHandler, GenerateFrames } from './types'
 
 export default function () {
-  once<GenerateFrames>('GENERATE_FRAMES', function (csvData: string) {
-    generateFrames(csvData, 5, 40)
+  once<GenerateFrames>('GENERATE_FRAMES', function (csvData: string, framesPerRow: number, gap: number) {
+    generateFrames(csvData, framesPerRow, gap)
       .catch(error => {
         console.error(error);
         figma.ui.postMessage({ type: 'error', message: 'An unexpected error occurred.' });
