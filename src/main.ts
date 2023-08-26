@@ -4,7 +4,7 @@ import { CloseHandler, GenerateFrames } from './types'
 
 export default function () {
   once<GenerateFrames>('GENERATE_FRAMES', function (csvData: string) {
-    generateFrames(csvData)
+    generateFrames(csvData, 5, 40)
       .catch(error => {
         console.error(error);
         figma.ui.postMessage({ type: 'error', message: 'An unexpected error occurred.' });
@@ -19,7 +19,7 @@ export default function () {
   })
 }
 
-async function generateFrames(csvData: string) {
+async function generateFrames(csvData: string, framesPerRow: number, gap: number) {
   const nodes: Array<SceneNode> = []
   const selectedFrame = figma.currentPage.selection[0]
   // error handling
@@ -37,7 +37,8 @@ async function generateFrames(csvData: string) {
 
   for (const [index, row] of parsedData.entries()) {
     const newFrame = selectedFrame.clone();
-    newFrame.x = selectedFrame.x + index * (selectedFrame.width + 40);
+    newFrame.x = selectedFrame.x + (index % framesPerRow) * (selectedFrame.width + gap);
+    newFrame.y = selectedFrame.y + (1 + Math.floor(index / framesPerRow)) * (selectedFrame.height + gap);
     figma.currentPage.appendChild(newFrame);
 
     for (const key of Object.keys(row)) {
