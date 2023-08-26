@@ -24,7 +24,7 @@ async function generateFrames(csvData: string) {
   const selectedFrame = figma.currentPage.selection[0]
   // error handling
 
-  if (!selectedFrame || selectedFrame.type !== 'FRAME') {
+  if (!selectedFrame || (selectedFrame.type !== 'FRAME' && selectedFrame.type !== 'INSTANCE')) {
     figma.ui.postMessage({ type: 'error', message: 'Select a frame to use as a template.' });
     return;
   }
