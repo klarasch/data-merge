@@ -101,7 +101,7 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
     console.log("Sending message:", { type: 'progress', progress: { current: index + 1, total: parsedData.length } });
   };
 
-  figma.notify(`🥰 Rendered ${dataLength} rows`);
+  figma.notify(`🥰 Rendered ${dataLength} frames`);
   // TODO: nodes are empty after this script hence the rows below won't do a thing
   // figma.currentPage.selection = nodes
   // figma.viewport.scrollAndZoomIntoView(nodes)
