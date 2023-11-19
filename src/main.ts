@@ -15,8 +15,10 @@ export default function () {
   once<CloseHandler>('CLOSE', function () {
     figma.closePlugin()
   })
-  showUI({ width: 260,
-    height: 420})
+  showUI({
+    width: 260,
+    height: 420
+  })
 }
 
 async function generateFrames(csvData: string, framesPerRow: number, gap: number) {
@@ -24,8 +26,11 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
   const selectedFrame = figma.currentPage.selection[0]
   // error handling
 
-  if (!selectedFrame || (selectedFrame.type !== 'FRAME' && selectedFrame.type !== 'INSTANCE')) {
-    figma.ui.postMessage({ type: 'error', message: 'Select a frame or instance to use as a template.' });
+  if (!selectedFrame
+    || (selectedFrame.type !== 'FRAME'
+      && selectedFrame.type !== 'INSTANCE'
+      && selectedFrame.type !== 'COMPONENT')) {
+    figma.ui.postMessage({ type: 'error', message: 'Select a frame, component or instance to use as a template.' });
     console.log("Nothing selected");
     return;
   }
@@ -50,7 +55,9 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
   }
 
   for (const [index, row] of parsedData.entries()) {
-    const newFrame = selectedFrame.clone();
+    const newFrame = selectedFrame.type === 'COMPONENT' ?
+      (selectedFrame as ComponentNode).createInstance() :
+      selectedFrame.clone();
     newFrame.x = selectedFrame.x + (index % framesPerRow) * (selectedFrame.width + gap);
     newFrame.y = selectedFrame.y + (1 + Math.floor(index / framesPerRow)) * (selectedFrame.height + gap);
     figma.currentPage.appendChild(newFrame);
