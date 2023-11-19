@@ -25,13 +25,25 @@ function Plugin() {
   const [gap, setGap] = useState<number | null>(40)
   const [gapString, setGapString] = useState('40')
   const [errorMessage, setErrorMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(false);
+  const [progressMessage, setProgressMessage] = useState('');
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      const { type, message } = event.data.pluginMessage;
+      const { type, message, progress } = event.data.pluginMessage;
       if (type === 'error') {
+        console.log("set isLoading to false", isLoading);
+        setIsLoading(false);
         setErrorMessage(message);
-        console.log(message);
+        setProgressMessage('');
+      } else if (type === 'progress') {
+        const total = progress.total;
+        const current = progress.current;
+        setProgressMessage(`Generating frame ${current} out of ${total}...`);
+      } else if (type === 'generation-complete') {
+        console.log("set isLoading to false", isLoading);
+        setIsLoading(false);
+        setProgressMessage('');
       }
     };
   
@@ -47,6 +59,8 @@ function Plugin() {
     function () {
       // Clear any existing error message
       setErrorMessage('');
+      setIsLoading(true);
+      console.log("set isLoading to true", isLoading);
   
       // Check if all required data is provided
       if (csvData.trim() === '' || framesPerRow === null || gap === null) {
@@ -58,7 +72,7 @@ function Plugin() {
       console.log("Emitting GenerateFrames event", { csvData, framesPerRow, gap });
       emit<GenerateFrames>('GENERATE_FRAMES', csvData, framesPerRow, gap);
     },
-    [csvData, framesPerRow, gap]
+    [csvData, framesPerRow, gap, isLoading]
   );
 
   return (
@@ -114,9 +128,10 @@ function Plugin() {
         </Columns>
 
         {errorMessage && <Text>⚠️ {errorMessage}</Text>}
-        <Button fullWidth onClick={handleGenerateFramesClick}>
+        <Button disabled={isLoading} loading={isLoading} fullWidth onClick={handleGenerateFramesClick}>
           Create frames
         </Button>
+        {progressMessage && <Text>{progressMessage}</Text>}
         
       </Stack>
     </Container>

@@ -25,7 +25,7 @@ export default function () {
 
 async function generateFrames(csvData: string, framesPerRow: number, gap: number) {
   console.log("generateFrames called with", { csvData, framesPerRow, gap });
-  const nodes: Array<SceneNode> = []
+  // const nodes: Array<SceneNode> = []
   const selectedFrame = figma.currentPage.selection[0]
   console.log("Selected frame:", selectedFrame);
 
@@ -86,11 +86,16 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
       }
     });
 
-//    figma.ui.postMessage({ type: 'progress', progress: (index + 1) / parsedData.length });
+    figma.ui.postMessage({ 
+      type: 'progress', 
+      progress: { current: index + 1, total: parsedData.length }
+    })
   });
 
-  figma.currentPage.selection = nodes
-  figma.viewport.scrollAndZoomIntoView(nodes)
+  figma.ui.postMessage({ type: 'generation-complete' })
+  // TODO: nodes are empty after this script hence the rows below won't do a thing
+  // figma.currentPage.selection = nodes
+  // figma.viewport.scrollAndZoomIntoView(nodes)
   // Note: Not closing the plugin here
 }
 
