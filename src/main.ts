@@ -4,6 +4,7 @@ import { CloseHandler, GenerateFrames } from './types'
 
 export default function () {
   once<GenerateFrames>('GENERATE_FRAMES', function (csvData: string, framesPerRow: number, gap: number) {
+    console.log("GenerateFrames event received", { csvData, framesPerRow, gap });
     generateFrames(csvData, framesPerRow, gap)
       .catch(error => {
         console.error(error);
@@ -15,7 +16,7 @@ export default function () {
     figma.closePlugin()
   })
   showUI({ width: 260,
-    height: 360})
+    height: 420})
 }
 
 async function generateFrames(csvData: string, framesPerRow: number, gap: number) {
@@ -24,13 +25,27 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
   // error handling
 
   if (!selectedFrame || (selectedFrame.type !== 'FRAME' && selectedFrame.type !== 'INSTANCE')) {
-    figma.ui.postMessage({ type: 'error', message: 'Select a frame to use as a template.' });
+    figma.ui.postMessage({ type: 'error', message: 'Select a frame or instance to use as a template.' });
+    console.log("Nothing selected");
     return;
   }
 
-  const parsedData = parseCSVData(csvData);
-  if (!parsedData.length) {
-    figma.ui.postMessage({ type: 'error', message: 'Provide valid data (failed to parse CSV).' });
+  if (!csvData.trim()) {
+    figma.ui.postMessage({ type: 'error', message: 'No CSV data provided.' });
+    console.log("No data");
+    return;
+  }
+
+  let parsedData;
+  try {
+    parsedData = parseCSVData(csvData);
+    if (!parsedData.length) {
+      console.log("Empty CSV");
+      throw new Error('Parsed CSV data is empty');
+    }
+  } catch (error) {
+    console.error(error);
+    figma.ui.postMessage({ type: 'error', message: 'Error parsing CSV data.' });
     return;
   }
 

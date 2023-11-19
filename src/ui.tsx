@@ -4,6 +4,7 @@ import {
   Container,
   IconLayerFrame16,
   IconSpaceHorizontal16,
+  IconWarning16,
   Muted,
   render,
   Stack,
@@ -14,7 +15,7 @@ import {
 } from '@create-figma-plugin/ui'
 import { emit } from '@create-figma-plugin/utilities'
 import { h } from 'preact'
-import { useCallback, useState } from 'preact/hooks'
+import { useCallback, useState, useEffect } from 'preact/hooks'
 
 import { GenerateFrames } from './types'
 
@@ -24,17 +25,43 @@ function Plugin() {
   const [framesPerRowString, setframesPerRowString] = useState('5')
   const [gap, setGap] = useState<number | null>(40)
   const [gapString, setGapString] = useState('40')
+  const [errorMessage, setErrorMessage] = useState('')
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const { type, message } = event.data.pluginMessage;
+      if (type === 'error') {
+        setErrorMessage(message);
+        console.log(message);
+      }
+    };
+  
+    window.addEventListener('message', handleMessage);
+  
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
+
+
   const handleGenerateFramesClick = useCallback(
     function () {
-      if (csvData !== null && framesPerRow !== null && gap !== null) {
-        emit<GenerateFrames>('GENERATE_FRAMES', csvData, framesPerRow, gap)
+      // Clear any existing error message
+      setErrorMessage('');
+  
+      // Check if all required data is provided
+      if (csvData.trim() === '' || framesPerRow === null || gap === null) {
+        console.log("GenerateFrames event not emitted due to missing data");
+        setErrorMessage('Please provide all required data before creating frames.'); // Set an error message
+        return;
       }
+  
+      console.log("Emitting GenerateFrames event", { csvData, framesPerRow, gap });
+      emit<GenerateFrames>('GENERATE_FRAMES', csvData, framesPerRow, gap);
     },
     [csvData, framesPerRow, gap]
-  )
-  // const handleCloseButtonClick = useCallback(function () {
-  //   emit<CloseHandler>('CLOSE')
-  // }, [])
+  );
+
   return (
     <Container space="small">
       <VerticalSpace space="extraLarge" />
@@ -87,10 +114,11 @@ function Plugin() {
           </Stack>
         </Columns>
 
+        {errorMessage && <Text>⚠️ {errorMessage}</Text>}
         <Button fullWidth onClick={handleGenerateFramesClick}>
           Create frames
         </Button>
-        <VerticalSpace space="small" />
+        
       </Stack>
     </Container>
   )
