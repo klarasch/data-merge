@@ -4,7 +4,6 @@ import {
   Container,
   IconLayerFrame16,
   IconSpaceHorizontal16,
-  IconWarning16,
   Muted,
   render,
   Stack,
