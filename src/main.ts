@@ -8,6 +8,7 @@ export default function () {
     try {
       await generateFrames(csvData, framesPerRow, gap);
       figma.ui.postMessage({ type: 'generation-complete' });
+      figma.closePlugin();
     } catch (error) {
       console.error("Error in generateFrames:", error);
       figma.ui.postMessage({ type: 'error', message: 'An unexpected error occurred.' });
@@ -28,7 +29,8 @@ export default function () {
 async function generateFrames(csvData: string, framesPerRow: number, gap: number) {
   console.log("generateFrames called with", { csvData, framesPerRow, gap });
   // const nodes: Array<SceneNode> = []
-  const selectedFrame = figma.currentPage.selection[0]
+  const selectedFrame = figma.currentPage.selection[0];
+  const uniqueFonts = new Set<FontName>();
   console.log("Selected frame:", selectedFrame);
 
   if (!selectedFrame
@@ -46,6 +48,14 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
     return;
   }
 
+  selectedFrame.findAll(node => node.type === "TEXT").forEach((node) => {
+    const textNode = node as TextNode; // Explicit type assertion
+    uniqueFonts.add(textNode.fontName as FontName);
+  });
+
+  const fontLoadPromises = Array.from(uniqueFonts).map(font => figma.loadFontAsync(font));
+  await Promise.all(fontLoadPromises);
+
   let parsedData;
   let dataLength;
   try {
@@ -62,7 +72,7 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
     return;
   }
 
-  parsedData.forEach((row, index) => {
+  for (const [index, row] of parsedData.entries()) {
     console.log(`Row ${index}:`, row);
 
     if (typeof row !== 'object' || row === null) {
@@ -77,21 +87,19 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
     newFrame.y = selectedFrame.y + (1 + Math.floor(index / framesPerRow)) * (selectedFrame.height + gap);
     figma.currentPage.appendChild(newFrame);
 
-    Object.entries(row).forEach(([key, value]) => {
+    const promises: Promise<void>[] = [];
+    for (const [key, value] of Object.entries(row)) {
       console.log("Processing key-value pair:", { key, value });
       const textLayer = newFrame.findOne(node => node.type === "TEXT" && node.name === key);
       if (textLayer) {
-        const textNode = textLayer as TextNode;
-        figma.loadFontAsync(textNode.fontName as FontName).then(() => {
-          textNode.characters = value;
-        }).catch(error => {
-          console.error("Error loading font:", error);
-        });
+        (textLayer as TextNode).characters = value;
       }
-    });
+    };
     
+    await Promise.all(promises);
+
     console.log("Sending message:", { type: 'progress', progress: { current: index + 1, total: parsedData.length } });
-  });
+  };
 
   figma.notify(`🥰 Rendered ${dataLength} rows`);
   // TODO: nodes are empty after this script hence the rows below won't do a thing
