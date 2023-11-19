@@ -8,7 +8,6 @@ export default function () {
     try {
       await generateFrames(csvData, framesPerRow, gap);
       figma.ui.postMessage({ type: 'generation-complete' });
-      figma.closePlugin();
     } catch (error) {
       console.error("Error in generateFrames:", error);
       figma.ui.postMessage({ type: 'error', message: 'An unexpected error occurred.' });
@@ -95,10 +94,9 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
         (textLayer as TextNode).characters = value;
       }
     };
-    
+
     await Promise.all(promises);
 
-    console.log("Sending message:", { type: 'progress', progress: { current: index + 1, total: parsedData.length } });
   };
 
   figma.notify(`🥰 Rendered ${dataLength} frames`);

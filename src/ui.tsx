@@ -32,8 +32,8 @@ function Plugin() {
     const handleMessage = (event: MessageEvent) => {
       const { type, message, progress } = event.data.pluginMessage;
       if (type === 'error') {
-        console.log("set isLoading to false", isLoading);
         setIsLoading(false);
+        console.log("set isLoading to false", isLoading);
         setErrorMessage(message);
         setProgressMessage('');
       } else if (type === 'progress') {
@@ -62,15 +62,8 @@ function Plugin() {
       setIsLoading(true);
       console.log("set isLoading to true", isLoading);
 
-      // Check if all required data is provided
-      if (csvData.trim() === '' || framesPerRow === null || gap === null) {
-        console.log("GenerateFrames event not emitted due to missing data");
-        setErrorMessage('Please provide all required data before creating frames.'); // Set an error message
-        return;
-      }
-
       console.log("Emitting GenerateFrames event", { csvData, framesPerRow, gap });
-      emit<GenerateFrames>('GENERATE_FRAMES', csvData, framesPerRow, gap);
+      emit<GenerateFrames>('GENERATE_FRAMES', csvData, framesPerRow ||  5, gap || 40);
     },
     [csvData, framesPerRow, gap, isLoading]
   );
