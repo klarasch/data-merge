@@ -3,13 +3,15 @@ import { CloseHandler, GenerateFrames } from './types'
 
 export default function () {
   console.log("Plugin main function started");
-  on<GenerateFrames>('GENERATE_FRAMES', function (csvData: string, framesPerRow: number, gap: number) {
+  on<GenerateFrames>('GENERATE_FRAMES', async function (csvData: string, framesPerRow: number, gap: number) {
     console.log("GenerateFrames event received", { csvData, framesPerRow, gap });
-    generateFrames(csvData, framesPerRow, gap)
-      .catch(error => {
-        console.error("Error in generateFrames:", error);
-        figma.ui.postMessage({ type: 'error', message: 'An unexpected error occurred.' });
-      });
+    try {
+      await generateFrames(csvData, framesPerRow, gap);
+      figma.ui.postMessage({ type: 'generation-complete' });
+    } catch (error) {
+      console.error("Error in generateFrames:", error);
+      figma.ui.postMessage({ type: 'error', message: 'An unexpected error occurred.' });
+    }
   });
 
   once<CloseHandler>('CLOSE', function () {
@@ -45,8 +47,10 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
   }
 
   let parsedData;
+  let dataLength;
   try {
     parsedData = parseCSVData(csvData);
+    dataLength = parsedData.length;
     console.log("Parsed data:", parsedData);
     if (!parsedData.length) {
       console.log("Parsed CSV data is empty");
@@ -85,14 +89,11 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
         });
       }
     });
-
-    figma.ui.postMessage({ 
-      type: 'progress', 
-      progress: { current: index + 1, total: parsedData.length }
-    })
+    
+    console.log("Sending message:", { type: 'progress', progress: { current: index + 1, total: parsedData.length } });
   });
 
-  figma.ui.postMessage({ type: 'generation-complete' })
+  figma.notify(`🥰 Rendered ${dataLength} rows`);
   // TODO: nodes are empty after this script hence the rows below won't do a thing
   // figma.currentPage.selection = nodes
   // figma.viewport.scrollAndZoomIntoView(nodes)

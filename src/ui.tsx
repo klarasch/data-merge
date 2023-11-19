@@ -46,9 +46,9 @@ function Plugin() {
         setProgressMessage('');
       }
     };
-  
+
     window.addEventListener('message', handleMessage);
-  
+
     return () => {
       window.removeEventListener('message', handleMessage);
     };
@@ -61,14 +61,14 @@ function Plugin() {
       setErrorMessage('');
       setIsLoading(true);
       console.log("set isLoading to true", isLoading);
-  
+
       // Check if all required data is provided
       if (csvData.trim() === '' || framesPerRow === null || gap === null) {
         console.log("GenerateFrames event not emitted due to missing data");
         setErrorMessage('Please provide all required data before creating frames.'); // Set an error message
         return;
       }
-  
+
       console.log("Emitting GenerateFrames event", { csvData, framesPerRow, gap });
       emit<GenerateFrames>('GENERATE_FRAMES', csvData, framesPerRow, gap);
     },
@@ -79,10 +79,10 @@ function Plugin() {
     <Container space="small">
       <VerticalSpace space="extraLarge" />
       <Stack space="medium">
-          <Text>
-            1. Select template frame<br />
-            <Muted>Make a frame with the template to be data merged. Make sure your text layers' names match column names of your data.</Muted>
-          </Text>
+        <Text>
+          1. Select template frame<br />
+          <Muted>Make a frame with the template to be data merged. Make sure your text layers' names match column names of your data.</Muted>
+        </Text>
         <Stack space="small">
           <Text>
             2. Paste data (tab-delimited CSV)<br />
@@ -96,8 +96,8 @@ function Plugin() {
           />
         </Stack>
         <Text>
-            3. Configure options
-          </Text>
+          3. Configure options
+        </Text>
         <Columns space="medium">
           <Stack space='extraSmall'>
             <Text>
@@ -132,7 +132,7 @@ function Plugin() {
           Create frames
         </Button>
         {progressMessage && <Text>{progressMessage}</Text>}
-        
+
       </Stack>
     </Container>
   )
