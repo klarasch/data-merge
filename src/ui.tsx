@@ -40,8 +40,8 @@ function Plugin() {
       <VerticalSpace space="extraLarge" />
       <Stack space="medium">
           <Text>
-            1. Name your layers<br />
-            <Muted>Make sure your text layers' names match column names of your data.</Muted>
+            1. Select template frame<br />
+            <Muted>Make a frame with the template to be data merged. Make sure your text layers' names match column names of your data.</Muted>
           </Text>
         <Stack space="small">
           <Text>

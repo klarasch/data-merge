@@ -30,7 +30,7 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
 
   const parsedData = parseCSVData(csvData);
   if (!parsedData.length) {
-    figma.ui.postMessage({ type: 'error', message: 'Failed to parse CSV data.' });
+    figma.ui.postMessage({ type: 'error', message: 'Provide valid data (failed to parse CSV).' });
     return;
   }
 
