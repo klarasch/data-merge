@@ -1,9 +1,9 @@
-import { once, showUI } from '@create-figma-plugin/utilities'
+import { on, once, showUI } from '@create-figma-plugin/utilities'
 
 import { CloseHandler, GenerateFrames } from './types'
 
 export default function () {
-  once<GenerateFrames>('GENERATE_FRAMES', function (csvData: string, framesPerRow: number, gap: number) {
+  on<GenerateFrames>('GENERATE_FRAMES', function (csvData: string, framesPerRow: number, gap: number) {
     console.log("GenerateFrames event received", { csvData, framesPerRow, gap });
     generateFrames(csvData, framesPerRow, gap)
       .catch(error => {
