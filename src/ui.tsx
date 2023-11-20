@@ -54,6 +54,15 @@ function Plugin() {
     };
   }, []);
 
+  const handlePaste = (event: ClipboardEvent) => {
+    event.preventDefault(); // Prevent the default paste action
+    const pastedData = event.clipboardData?.getData('text') || '';
+    const trimmedData = pastedData
+      .split('\n')
+      .filter(line => line.trim() !== '') // Remove empty lines
+      .join('\n');
+    setCsvData(trimmedData); // Set the trimmed data to state
+  };
 
   const handleGenerateFramesClick = useCallback(
     function () {
@@ -83,6 +92,7 @@ function Plugin() {
           </Text>
           <TextboxMultiline
             onValueInput={setCsvData}
+            onPaste={handlePaste}
             value={csvData}
             variant="border"
             style="font-family: monospace;"

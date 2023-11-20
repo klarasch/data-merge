@@ -7,11 +7,11 @@ export default function () {
     console.log("GenerateFrames event received", { csvData, framesPerRow, gap });
     try {
       await generateFrames(csvData, framesPerRow, gap);
+      figma.ui.postMessage({ type: 'generation-complete' });
     } catch (error) {
       console.error("Error in generateFrames:", error);
       figma.ui.postMessage({ type: 'error', message: 'An unexpected error occurred.' });
     }
-    // figma.ui.postMessage({ type: 'generation-complete' });
   });
 
   once<CloseHandler>('CLOSE', function () {
