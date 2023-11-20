@@ -25,6 +25,10 @@ export default function () {
   })
 }
 
+function delay(time: number): Promise<void> {
+  return new Promise<void>((resolve) => setTimeout(resolve, time));
+}
+
 async function generateFrames(csvData: string, framesPerRow: number, gap: number) {
   console.log("generateFrames called with", { csvData, framesPerRow, gap });
   const nodes: Array<SceneNode> = [];
@@ -80,6 +84,7 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
     return;
   }
 
+  let processedItems = 0;
   for (const [index, row] of parsedData.entries()) {
     console.log(`Row ${index}:`, row);
 
@@ -97,11 +102,13 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
     nodes.push(newFrame);
 
     for (const [key, value] of Object.entries(row)) {
+      if (processedItems % 200 == 0) await delay(40); // quick'n'dirty to make the UI responsive a bit
       console.log("Processing key-value pair:", { key, value });
       const textLayer = newFrame.findOne(node => node.type === "TEXT" && node.name === key);
       if (textLayer) {
         (textLayer as TextNode).characters = value;
       }
+      processedItems++;
     };
   };
 
