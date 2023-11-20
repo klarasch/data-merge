@@ -96,7 +96,6 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
     figma.currentPage.appendChild(newFrame);
     nodes.push(newFrame);
 
-    const promises: Promise<void>[] = [];
     for (const [key, value] of Object.entries(row)) {
       console.log("Processing key-value pair:", { key, value });
       const textLayer = newFrame.findOne(node => node.type === "TEXT" && node.name === key);
@@ -104,9 +103,6 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
         (textLayer as TextNode).characters = value;
       }
     };
-
-    await Promise.all(promises);
-
   };
 
   figma.notify(`🥰 Rendered ${dataLength} frames`);
