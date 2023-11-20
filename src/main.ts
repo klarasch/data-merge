@@ -115,6 +115,7 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
   figma.notify(`🥰 Rendered ${dataLength} frames`);
   figma.currentPage.selection = nodes;
   figma.viewport.scrollAndZoomIntoView(nodes);
+  figma.closePlugin();
 }
 
 function parseCSVData(data: string, delimiter: string = '\t'): Array<{ [key: string]: string }> {
