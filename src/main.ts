@@ -52,8 +52,17 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
     uniqueFonts.add(textNode.fontName as FontName);
   });
 
-  const fontLoadPromises = Array.from(uniqueFonts).map(font => figma.loadFontAsync(font));
-  await Promise.all(fontLoadPromises);
+  try {
+    const fontLoadPromises = Array.from(uniqueFonts).map(font => figma.loadFontAsync(font));
+    await Promise.all(fontLoadPromises);
+  } catch (error) {
+    console.error("Error during font loading:", error);  
+    figma.ui.postMessage({
+      type: 'error',
+      message: `Looks like some of the fonts are unavailable. Try resolving Missing fonts in this file.`
+    });
+    return;
+  }
 
   let parsedData;
   let dataLength;
