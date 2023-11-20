@@ -27,7 +27,7 @@ export default function () {
 
 async function generateFrames(csvData: string, framesPerRow: number, gap: number) {
   console.log("generateFrames called with", { csvData, framesPerRow, gap });
-  // const nodes: Array<SceneNode> = []
+  const nodes: Array<SceneNode> = [];
   const selectedFrame = figma.currentPage.selection[0];
   const uniqueFonts = new Set<FontName>();
   console.log("Selected frame:", selectedFrame);
@@ -85,6 +85,7 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
     newFrame.x = selectedFrame.x + (index % framesPerRow) * (selectedFrame.width + gap);
     newFrame.y = selectedFrame.y + (1 + Math.floor(index / framesPerRow)) * (selectedFrame.height + gap);
     figma.currentPage.appendChild(newFrame);
+    nodes.push(newFrame);
 
     const promises: Promise<void>[] = [];
     for (const [key, value] of Object.entries(row)) {
@@ -100,10 +101,8 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
   };
 
   figma.notify(`🥰 Rendered ${dataLength} frames`);
-  // TODO: nodes are empty after this script hence the rows below won't do a thing
-  // figma.currentPage.selection = nodes
-  // figma.viewport.scrollAndZoomIntoView(nodes)
-  // Note: Not closing the plugin here
+  figma.currentPage.selection = nodes;
+  figma.viewport.scrollAndZoomIntoView(nodes);
 }
 
 function parseCSVData(data: string, delimiter: string = '\t'): Array<{ [key: string]: string }> {
