@@ -2,7 +2,12 @@
 ## A plugin to generate certificates, business cards and similar in Figma
 
 [Plugin in Figma Community](https://www.figma.com/community/plugin/1308577896517145604/data-merge)
+
 Hit "Try it out" to try the plugin out! 
+
+Fun fact: most of the coding was done by my friend ChatGPT4, but I did have to help quite a lot.
+
+Improvement suggestions, bug reports, pull requests all welcome!
 ## Development guide
 
 *This plugin is built with [Create Figma Plugin](https://yuanqing.github.io/create-figma-plugin/) and this README is mostly left as it was for Preact Rectangles.*
