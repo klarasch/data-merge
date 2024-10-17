@@ -104,9 +104,19 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
     for (const [key, value] of Object.entries(row)) {
       if (processedItems % 200 == 0) await delay(40); // quick'n'dirty to make the UI responsive a bit
       console.log("Processing key-value pair:", { key, value });
-      const textLayer = newFrame.findOne(node => node.type === "TEXT" && node.name === key);
-      if (textLayer) {
-        (textLayer as TextNode).characters = value;
+      const targetLayer = newFrame.findOne(node => node.name.trim() === key.trim());
+      if (targetLayer) {
+        if (targetLayer.type === "TEXT")
+          (targetLayer as TextNode).characters = value;
+        else if (checkIfImgUrl(value) && "fills" in targetLayer) {
+          try {
+            const response = await fetch(value);
+            const imageBytes = new Uint8Array(await response.arrayBuffer());
+            targetLayer.fills = [{ type: 'IMAGE', imageHash: figma.createImage(imageBytes).hash, scaleMode: 'FILL' }];
+          } catch (error) {
+            console.error(`Failed to apply image: ${value}`, error);
+          }
+        }
       }
       processedItems++;
     };
@@ -141,4 +151,18 @@ function parseCSVData(data: string, delimiter: string = '\t'): Array<{ [key: str
   });
 
   return result;
+}
+
+function checkIfImgUrl(data: string) {
+  const cleanUrl = data.split(/[?#]/)[0].trim();
+  const validImageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+  const urlPattern = new RegExp(
+    '^(https?:\\/\\/)' + // Match http or https protocols
+    '([\\w.-]+)' + // Match domain name (simplified)
+    '(\\/.*)?$', // Match optional path
+  );
+  
+  const isValidUrl = urlPattern.test(cleanUrl);
+  const hasValidImageExtension = validImageExtensions.some(ext => cleanUrl.toLowerCase().endsWith(ext));
+  return isValidUrl && hasValidImageExtension;
 }
