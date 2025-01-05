@@ -1,69 +1,92 @@
-import { on, once, showUI } from '@create-figma-plugin/utilities'
-import { CloseHandler, GenerateFrames } from './types'
+import { on, once, showUI } from "@create-figma-plugin/utilities";
+import { CloseHandler, GenerateFrames } from "./types";
 
 export default function () {
   console.log("Plugin main function started");
-  on<GenerateFrames>('GENERATE_FRAMES', async function (csvData: string, framesPerRow: number, gap: number) {
-    console.log("GenerateFrames event received", { csvData, framesPerRow, gap });
-    try {
-      await generateFrames(csvData, framesPerRow, gap);
-      figma.ui.postMessage({ type: 'generation-complete' });
-    } catch (error) {
-      console.error("Error in generateFrames:", error);
-      figma.ui.postMessage({ type: 'error', message: 'An unexpected error occurred.' });
+  on<GenerateFrames>(
+    "GENERATE_FRAMES",
+    async function (csvData: string, framesPerRow: number, gap: number) {
+      console.log("GenerateFrames event received", {
+        csvData,
+        framesPerRow,
+        gap,
+      });
+      try {
+        await generateFrames(csvData, framesPerRow, gap);
+        figma.ui.postMessage({ type: "generation-complete" });
+      } catch (error) {
+        console.error("Error in generateFrames:", error);
+        figma.ui.postMessage({
+          type: "error",
+          message: "An unexpected error occurred.",
+        });
+      }
     }
-  });
+  );
 
-  once<CloseHandler>('CLOSE', function () {
+  once<CloseHandler>("CLOSE", function () {
     console.log("Close event received");
-    figma.closePlugin()
-  })
+    figma.closePlugin();
+  });
 
   showUI({
     width: 260,
-    height: 420
-  })
+    height: 420,
+  });
 }
 
 function delay(time: number): Promise<void> {
   return new Promise<void>((resolve) => setTimeout(resolve, time));
 }
 
-async function generateFrames(csvData: string, framesPerRow: number, gap: number) {
+async function generateFrames(
+  csvData: string,
+  framesPerRow: number,
+  gap: number
+) {
   console.log("generateFrames called with", { csvData, framesPerRow, gap });
   const nodes: Array<SceneNode> = [];
   const selectedFrame = figma.currentPage.selection[0];
   const uniqueFonts = new Set<FontName>();
   console.log("Selected frame:", selectedFrame);
 
-  if (!selectedFrame
-    || (selectedFrame.type !== 'FRAME'
-      && selectedFrame.type !== 'INSTANCE'
-      && selectedFrame.type !== 'COMPONENT')) {
+  if (
+    !selectedFrame ||
+    (selectedFrame.type !== "FRAME" &&
+      selectedFrame.type !== "INSTANCE" &&
+      selectedFrame.type !== "COMPONENT")
+  ) {
     console.log("Invalid selection");
-    figma.ui.postMessage({ type: 'error', message: 'Select a frame, component or instance to use as a template.' });
+    figma.ui.postMessage({
+      type: "error",
+      message: "Select a frame, component or instance to use as a template.",
+    });
     return;
   }
 
   if (!csvData.trim()) {
     console.log("CSV data is empty");
-    figma.ui.postMessage({ type: 'error', message: 'No CSV data provided.' });
+    figma.ui.postMessage({ type: "error", message: "No CSV data provided." });
     return;
   }
 
-  selectedFrame.findAll(node => node.type === "TEXT").forEach((node) => {
-    const textNode = node as TextNode; // Explicit type assertion
-    uniqueFonts.add(textNode.fontName as FontName);
-  });
+  selectedFrame
+    .findAll((node) => node.type === "TEXT")
+    .forEach((node) => {
+      const textNode = node as TextNode; // Explicit type assertion
+      uniqueFonts.add(textNode.fontName as FontName);
+    });
 
   try {
-    const fontLoadPromises = Array.from(uniqueFonts).map(font => figma.loadFontAsync(font));
+    const fontLoadPromises = Array.from(uniqueFonts).map((font) =>
+      figma.loadFontAsync(font)
+    );
     await Promise.all(fontLoadPromises);
   } catch (error) {
-    console.error("Error during font loading:", error);  
+    console.error("Error during font loading:", error);
     figma.ui.postMessage({
-      type: 'error',
-      message: `Looks like some of the fonts are unavailable. Try resolving Missing fonts in this file.`
+      type: "error",
+      message: `Looks like some of the fonts are unavailable. Try resolving Missing fonts in this file.`,
     });
     return;
   }
@@ -76,11 +99,11 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
     console.log("Parsed data:", parsedData);
     if (!parsedData.length) {
       console.log("Parsed CSV data is empty");
-      throw new Error('Parsed CSV data is empty');
+      throw new Error("Parsed CSV data is empty");
     }
   } catch (error) {
     console.error("Error parsing CSV data:", error);
-    figma.ui.postMessage({ type: 'error', message: 'Error parsing CSV data.' });
+    figma.ui.postMessage({ type: "error", message: "Error parsing CSV data." });
     return;
   }
 
@@ -88,23 +111,29 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
   for (const [index, row] of parsedData.entries()) {
     console.log(`Row ${index}:`, row);
 
-    if (typeof row !== 'object' || row === null) {
+    if (typeof row !== "object" || row === null) {
       console.error(`Row ${index} is not an object or is null`, row);
       return; // Skip this iteration
     }
 
-    const newFrame = selectedFrame.type === 'COMPONENT' ?
-      (selectedFrame as ComponentNode).createInstance() :
-      selectedFrame.clone();
-    newFrame.x = selectedFrame.x + (index % framesPerRow) * (selectedFrame.width + gap);
-    newFrame.y = selectedFrame.y + (1 + Math.floor(index / framesPerRow)) * (selectedFrame.height + gap);
+    const newFrame =
+      selectedFrame.type === "COMPONENT"
+        ? (selectedFrame as ComponentNode).createInstance()
+        : selectedFrame.clone();
+    newFrame.x =
+      selectedFrame.x + (index % framesPerRow) * (selectedFrame.width + gap);
+    newFrame.y =
+      selectedFrame.y +
+      (1 + Math.floor(index / framesPerRow)) * (selectedFrame.height + gap);
     figma.currentPage.appendChild(newFrame);
     nodes.push(newFrame);
 
     for (const [key, value] of Object.entries(row)) {
       if (processedItems % 200 == 0) await delay(40); // quick'n'dirty to make the UI responsive a bit
       console.log("Processing key-value pair:", { key, value });
-      const targetLayer = newFrame.findOne(node => node.name.trim() === key.trim());
+      const targetLayer = newFrame.findOne(
+        (node) => node.type === "TEXT" && node.name.trim() === key.trim()
+      );
       if (targetLayer) {
         if (targetLayer.type === "TEXT")
           (targetLayer as TextNode).characters = value;
@@ -112,15 +141,21 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
           try {
             const response = await fetch(value);
             const imageBytes = new Uint8Array(await response.arrayBuffer());
-            targetLayer.fills = [{ type: 'IMAGE', imageHash: figma.createImage(imageBytes).hash, scaleMode: 'FILL' }];
+            targetLayer.fills = [
+              {
+                type: "IMAGE",
+                imageHash: figma.createImage(imageBytes).hash,
+                scaleMode: "FILL",
+              },
+            ];
           } catch (error) {
             console.error(`Failed to apply image: ${value}`, error);
           }
         }
       }
       processedItems++;
-    };
-  };
+    }
+  }
 
   figma.notify(`🥰 Rendered ${dataLength} frames`);
   figma.currentPage.selection = nodes;
@@ -128,9 +163,12 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
   figma.closePlugin();
 }
 
-function parseCSVData(data: string, delimiter: string = '\t'): Array<{ [key: string]: string }> {
+function parseCSVData(
+  data: string,
+  delimiter: string = "\t"
+): Array<{ [key: string]: string }> {
   console.log("Parsing CSV data");
-  const rows = data.split('\n');
+  const rows = data.split("\n");
   if (!rows[0]) {
     console.log("CSV header row is empty");
     return [];
@@ -155,14 +193,24 @@ function parseCSVData(data: string, delimiter: string = '\t'): Array<{ [key: str
 
 function checkIfImgUrl(data: string) {
   const cleanUrl = data.split(/[?#]/)[0].trim();
-  const validImageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+  const validImageExtensions = [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".bmp",
+    ".webp",
+    ".svg",
+  ];
   const urlPattern = new RegExp(
-    '^(https?:\\/\\/)' + // Match http or https protocols
-    '([\\w.-]+)' + // Match domain name (simplified)
-    '(\\/.*)?$', // Match optional path
+    "^(https?:\\/\\/)" + // Match http or https protocols
+      "([\\w.-]+)" + // Match domain name (simplified)
+      "(\\/.*)?$" // Match optional path
   );
-  
+
   const isValidUrl = urlPattern.test(cleanUrl);
-  const hasValidImageExtension = validImageExtensions.some(ext => cleanUrl.toLowerCase().endsWith(ext));
+  const hasValidImageExtension = validImageExtensions.some((ext) =>
+    cleanUrl.toLowerCase().endsWith(ext)
+  );
   return isValidUrl && hasValidImageExtension;
 }
