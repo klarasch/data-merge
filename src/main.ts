@@ -104,7 +104,7 @@ async function generateFrames(csvData: string, framesPerRow: number, gap: number
     for (const [key, value] of Object.entries(row)) {
       if (processedItems % 200 == 0) await delay(40); // quick'n'dirty to make the UI responsive a bit
       console.log("Processing key-value pair:", { key, value });
-      const textLayer = newFrame.findOne(node => node.type === "TEXT" && node.name === key);
+      const textLayer = newFrame.findOne(node => node.type === "TEXT" && node.name.trim() === key.trim());
       if (textLayer) {
         (textLayer as TextNode).characters = value;
       }
